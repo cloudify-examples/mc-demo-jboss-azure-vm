@@ -71,7 +71,7 @@ inputs:
     type: string
     default: Standard_B1s
 
-  agent_user:
+  ssh_user:
     type: string
     default: { get_secret: default_linux_agent_user }
 
@@ -169,6 +169,17 @@ node_templates:
               priority: 104
               access: Allow
               direction: Inbound
+          - name: sg_ssh
+            properties:
+              description: SSH access
+              protocol: Tcp
+              sourcePortRange: '*'
+              destinationPortRange: 22
+              sourceAddressPrefix: '*'
+              destinationAddressPrefix: '*'
+              priority: 105
+              access: Allow
+              direction: Inbound
     relationships:
       - type: cloudify.azure.relationships.contained_in_resource_group
         target: resource_group
@@ -228,9 +239,7 @@ node_templates:
                   keyData: { get_input: public_key_data }
             disablePasswordAuthentication: True
       agent_config:
-        user: { get_input: agent_user }
-        key: { get_input: private_key_path }
-        port: 22
+        install_method: none
     relationships:
       - type: cloudify.azure.relationships.contained_in_resource_group
         target: resource_group
@@ -244,5 +253,7 @@ capabilities:
     value: { get_attribute: [vm, ip] }
   public_ip:
     value: { get_attribute: [public_ip, public_ip_address] }
-  vm_node_instance_id:
-    value: { get_attribute: [ vm, node_instance_id ]}
+  ssh_user:
+    value: { get_input: ssh_user }
+  private_key_path:
+    value: { get_input: private_key_path }
